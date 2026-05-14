@@ -119,29 +119,6 @@ app.get('/playlist.m3u8', (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-// RUTA: /api/chrome-path — diagnóstico temporal para encontrar Chrome
-// ─────────────────────────────────────────────
-app.get('/api/chrome-path', (req, res) => {
-  const puppeteer = require('puppeteer');
-  const fs = require('fs');
-  let execPath = null;
-  let execError = null;
-  try {
-    execPath = puppeteer.executablePath();
-  } catch (e) {
-    execError = e.message;
-  }
-  res.json({
-    executablePath: execPath,
-    executableExists: execPath ? fs.existsSync(execPath) : false,
-    executableError: execError,
-    PUPPETEER_CACHE_DIR: process.env.PUPPETEER_CACHE_DIR || null,
-    PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH || null,
-    HOME: process.env.HOME || null,
-  });
-});
-
-// ─────────────────────────────────────────────
 // RUTA: /api/status — estado del caché (JSON)
 // ─────────────────────────────────────────────
 app.get('/api/status', (req, res) => {
