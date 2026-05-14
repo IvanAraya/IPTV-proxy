@@ -131,13 +131,13 @@ const CHANNELS = {
     name: 'Teletrack',
     group: 'Deportes',
     logo: 'https://teletrak.cl/wp-content/uploads/2025/09/TELETRAK-LOGO-MAID-02.png',
-    directUrl: 'https://teletraktv.janus.cl/playlist/stream.m3u8',
+    directUrl: 'https://teletraktv.janus.cl/playlist/stream.m3u8?id=mp3a92s3',
   },
   tvturf: {
     name: 'TV Turf',
     group: 'Deportes',
     logo: 'https://tvturf.cl/tvturf/site/artic/20181221/imag/foto_0000001320181221154000/Sin_titulo-1.png',
-    directUrl: 'https://tvturf4.janus.cl/playlist/stream.m3u8',
+    directUrl: 'https://tvturf4.janus.cl/playlist/stream.m3u8?id=mp3ajrmh',
   },
   energeek: {
     name: 'Energeek Retro',
