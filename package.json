@@ -5,11 +5,13 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "postinstall": "node scripts/install-browser.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "puppeteer": "22.15.0",
+    "puppeteer-core": "22.15.0",
+    "@puppeteer/browsers": "2.4.0",
     "node-cache": "^5.1.2",
     "axios": "^1.6.0"
   },
