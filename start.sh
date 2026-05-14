@@ -3,16 +3,22 @@ set -e
 
 CACHE_DIR="${PUPPETEER_CACHE_DIR:-/opt/render/project/src/.cache/puppeteer}"
 
-# Obtener la ruta esperada del binario via Node
+echo "[start] PUPPETEER_CACHE_DIR=${PUPPETEER_CACHE_DIR}"
+echo "[start] CACHE_DIR=${CACHE_DIR}"
+
 CHROME_EXEC=$(node -e "const p=require('puppeteer');try{console.log(p.executablePath())}catch(e){console.log('')}" 2>/dev/null)
+echo "[start] executablePath esperado: ${CHROME_EXEC}"
+echo "[start] Existe: $([ -f "$CHROME_EXEC" ] && echo SI || echo NO)"
 
 if [ -z "$CHROME_EXEC" ] || [ ! -f "$CHROME_EXEC" ]; then
-  echo "[start] Chrome no encontrado. Limpiando e instalando..."
+  echo "[start] Limpiando e instalando Chrome..."
   rm -rf "$CACHE_DIR/chrome"
-  npx puppeteer browsers install chrome
-  echo "[start] Chrome instalado en: $(find "$CACHE_DIR" -name chrome -type f 2>/dev/null | head -1)"
+  ./node_modules/.bin/puppeteer browsers install chrome 2>&1
+  echo "[start] Exit code: $?"
+  echo "[start] Contenido de $CACHE_DIR:"
+  find "$CACHE_DIR" -type f 2>/dev/null || echo "(vacío)"
 else
-  echo "[start] Chrome ya disponible: $CHROME_EXEC"
+  echo "[start] Chrome ya disponible, saltando instalación"
 fi
 
 echo "[start] Iniciando servidor..."
