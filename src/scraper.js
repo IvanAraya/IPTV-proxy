@@ -6,7 +6,7 @@ const os = require('os');
 const CACHE_DIR =
   process.env.PUPPETEER_CACHE_DIR ||
   (process.env.RENDER
-    ? '/opt/render/.cache/puppeteer'
+    ? '/opt/render/project/src/.cache/puppeteer'
     : path.join(os.homedir(), '.cache', 'puppeteer'));
 
 let browserInstance = null;

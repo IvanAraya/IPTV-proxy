@@ -5,12 +5,12 @@ services:
     nodeVersion: 20.19.2
     region: oregon
     plan: free
-    buildCommand: PUPPETEER_CACHE_DIR=/opt/render/.cache/puppeteer npm install && PUPPETEER_CACHE_DIR=/opt/render/.cache/puppeteer npx puppeteer browsers install chrome
+    buildCommand: PUPPETEER_CACHE_DIR=/opt/render/project/src/.cache/puppeteer npm install && PUPPETEER_CACHE_DIR=/opt/render/project/src/.cache/puppeteer npx puppeteer browsers install chrome
     startCommand: node src/server.js
     envVars:
       - key: PORT
         value: 10000
       - key: PUPPETEER_CACHE_DIR
-        value: /opt/render/.cache/puppeteer
+        value: /opt/render/project/src/.cache/puppeteer
     healthCheckPath: /api/status
     autoDeploy: true
