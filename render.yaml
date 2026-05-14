@@ -6,12 +6,13 @@ services:
     plan: free
     buildCommand: npm install
     startCommand: node src/server.js
+    nodeVersion: 20.19.2
     envVars:
       - key: NODE_ENV
         value: production
       - key: BASE_URL
         # ⚠️ Reemplaza esto con tu URL real de Render después del primer deploy
-        # Ejemplo: https://mdstrm-proxy.onrender.com
+        # Ejemplo: https://iptv-proxy.onrender.com
         value: https://TU-SERVICIO.onrender.com
       - key: PORT
         value: 10000
