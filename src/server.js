@@ -13,7 +13,17 @@ const {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+
+// Detecta la URL base automáticamente desde los headers del request.
+// En Render, x-forwarded-proto = 'https' y host = 'tu-servicio.onrender.com'
+// No requiere ninguna variable de entorno.
+function getBaseUrl(req) {
+  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const host = req.headers['x-forwarded-host'] || req.headers['host'] || `localhost:${PORT}`;
+  // x-forwarded-proto puede venir como "https,http" — tomar solo el primero
+  const cleanProto = proto.split(',')[0].trim();
+  return `${cleanProto}://${host}`;
+}
 
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -89,10 +99,11 @@ app.get('/stream/:channelId', async (req, res) => {
 // RUTA: /playlist.m3u8 — genera la lista M3U completa
 // ─────────────────────────────────────────────
 app.get('/playlist.m3u8', (req, res) => {
+  const baseUrl = getBaseUrl(req);
   const lines = ['#EXTM3U x-tvg-url="https://iptv-org.github.io/epg/guides/cl/programas.cl.epg.xml"', ''];
 
   for (const [id, ch] of Object.entries(CHANNELS)) {
-    const streamUrl = `${BASE_URL}/stream/${id}`;
+    const streamUrl = `${baseUrl}/stream/${id}`;
     lines.push(
       `#EXTINF:-1 tvg-id="${id}" tvg-name="${ch.name}" tvg-logo="${ch.logo || ''}" tvg-country="CL" tvg-language="Spanish" group-title="${ch.group}",${ch.name}`
     );
@@ -110,6 +121,7 @@ app.get('/playlist.m3u8', (req, res) => {
 // RUTA: /api/status — estado del caché (JSON)
 // ─────────────────────────────────────────────
 app.get('/api/status', (req, res) => {
+  const baseUrl = getBaseUrl(req);
   const stats = getStats();
   const channels = Object.entries(CHANNELS).map(([id, ch]) => {
     const cacheInfo = stats.find((s) => s.channel === id);
@@ -117,14 +129,15 @@ app.get('/api/status', (req, res) => {
     return {
       id,
       name: ch.name,
+      logo: ch.logo || '',
       group: ch.group,
       type: ch.directUrl ? 'direct' : 'mdstrm',
       cached: cacheInfo?.hasUrl || !!ch.directUrl,
       ttlSeconds: ttlMs ? Math.round(ttlMs / 1000) : ch.directUrl ? null : 0,
-      streamUrl: `${BASE_URL}/stream/${id}`,
+      streamUrl: `${baseUrl}/stream/${id}`,
     };
   });
-  res.json({ baseUrl: BASE_URL, channels });
+  res.json({ baseUrl, playlistUrl: `${baseUrl}/playlist.m3u8`, channels });
 });
 
 // ─────────────────────────────────────────────
@@ -165,9 +178,8 @@ app.get('/', (req, res) => {
 // INICIO
 // ─────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🚀 mdstrm-proxy corriendo en ${BASE_URL}`);
-  console.log(`📺 Lista M3U: ${BASE_URL}/playlist.m3u8`);
-  console.log(`📊 Estado:   ${BASE_URL}/api/status\n`);
+  console.log(`\n🚀 mdstrm-proxy corriendo en el puerto ${PORT}`);
+  console.log(`   La URL pública se detecta automáticamente desde los headers HTTP\n`);
 });
 
 module.exports = app;
