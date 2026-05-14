@@ -2,7 +2,6 @@ services:
   - type: web
     name: iptv-proxy
     env: node
-    nodeVersion: 20.19.2
     region: oregon
     plan: free
     buildCommand: bash build.sh
