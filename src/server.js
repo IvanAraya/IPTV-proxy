@@ -179,7 +179,7 @@ app.get('/', (req, res) => {
 // INICIO
 // ─────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🚀 mdstrm-proxy corriendo en el puerto ${PORT}`);
+  console.log(`\n🚀 iptv-proxy corriendo en el puerto ${PORT}`);
   console.log(`   La URL pública se detecta automáticamente desde los headers HTTP\n`);
 });
 
