@@ -5,7 +5,7 @@ services:
     nodeVersion: 20.19.2
     region: oregon
     plan: free
-    buildCommand: npm install && node scripts/install-browser.js
+    buildCommand: npm install && npx puppeteer browsers install chrome
     startCommand: node src/server.js
     envVars:
       - key: PORT

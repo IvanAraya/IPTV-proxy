@@ -12,78 +12,67 @@ const CACHE_DIR =
 let browserInstance = null;
 
 /**
- * Busca el ejecutable de Chrome escaneando el directorio de caché.
- * Esto evita depender de que resolveBuildId devuelva el build ID exacto.
+ * Busca el ejecutable de Chrome en el cache dir recursivamente.
+ * Evita depender de resolveBuildId que puede calcular un path distinto al real.
  */
 function findChromeExecutable() {
-  // 1. Variable de entorno explícita (máxima prioridad)
+  // 1. Variable de entorno explícita
   if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    console.log(`[Puppeteer] Usando PUPPETEER_EXECUTABLE_PATH: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
     return process.env.PUPPETEER_EXECUTABLE_PATH;
   }
 
-  // 2. Ruta que puppeteer mismo conoce
+  // 2. puppeteer.executablePath() — sabe exactamente dónde instaló Chrome
   try {
     const execPath = puppeteer.executablePath();
     if (execPath && fs.existsSync(execPath)) {
-      console.log(`[Puppeteer] Chrome encontrado via puppeteer.executablePath(): ${execPath}`);
+      console.log(`[Puppeteer] Chrome via executablePath(): ${execPath}`);
       return execPath;
     }
-  } catch (_) {}
+    console.warn(`[Puppeteer] executablePath() devolvió ${execPath} pero no existe`);
+  } catch (e) {
+    console.warn(`[Puppeteer] executablePath() falló: ${e.message}`);
+  }
 
-  // 3. Buscar recursivamente en el cache dir
+  // 3. Búsqueda recursiva en el filesystem
   console.log(`[Puppeteer] Buscando Chrome en: ${CACHE_DIR}`);
-  const candidates = findFiles(CACHE_DIR, (f) =>
-    (f === 'chrome' || f === 'chrome.exe' || f === 'chromium' || f === 'chromium.exe') &&
-    !f.endsWith('.lock')
-  );
+  const candidates = [];
+  function walk(dir) {
+    if (!fs.existsSync(dir)) return;
+    try {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(full);
+        } else if (entry.name === 'chrome' || entry.name === 'chromium') {
+          try { fs.accessSync(full, fs.constants.X_OK); candidates.push(full); } catch (_) {}
+        }
+      }
+    } catch (_) {}
+  }
+  walk(CACHE_DIR);
 
   if (candidates.length > 0) {
-    // Ordenar descendente para preferir versiones más nuevas
     candidates.sort().reverse();
-    const found = candidates[0];
-    console.log(`[Puppeteer] Chrome encontrado en filesystem: ${found}`);
-    return found;
+    console.log(`[Puppeteer] Chrome encontrado: ${candidates[0]}`);
+    return candidates[0];
   }
 
   return null;
 }
 
-/**
- * Recorre un directorio recursivamente buscando archivos que cumplan el predicado.
- */
-function findFiles(dir, predicate, results = []) {
-  if (!fs.existsSync(dir)) return results;
-  try {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        findFiles(full, predicate, results);
-      } else if (predicate(entry.name)) {
-        // Verificar que sea ejecutable
-        try {
-          fs.accessSync(full, fs.constants.X_OK);
-          results.push(full);
-        } catch (_) {}
-      }
-    }
-  } catch (_) {}
-  return results;
-}
-
 async function getBrowser() {
-  if (browserInstance && browserInstance.isConnected()) {
-    return browserInstance;
-  }
+  if (browserInstance && browserInstance.isConnected()) return browserInstance;
 
   const executablePath = findChromeExecutable();
   if (!executablePath) {
     throw new Error(
-      `Chrome no encontrado en ${CACHE_DIR}. ` +
-      `Asegúrate de que el buildCommand incluye: node scripts/install-browser.js`
+      `Chrome no encontrado en ${CACHE_DIR}.\n` +
+      `El buildCommand debe incluir: npx puppeteer browsers install chrome`
     );
   }
 
-  console.log(`[Puppeteer] Lanzando Chrome: ${executablePath}`);
+  console.log(`[Puppeteer] Lanzando browser...`);
   browserInstance = await puppeteer.launch({
     executablePath,
     headless: true,
@@ -96,8 +85,6 @@ async function getBrowser() {
       '--no-zygote',
       '--single-process',
       '--disable-extensions',
-      '--disable-background-networking',
-      '--disable-default-apps',
       '--mute-audio',
     ],
   });
@@ -110,9 +97,6 @@ async function getBrowser() {
   return browserInstance;
 }
 
-/**
- * Extrae la URL m3u8 con token de una página que use el player de mdstrm.
- */
 async function extractStreamUrl(pageUrl, mdstrmId = null) {
   const browser = await getBrowser();
   const page = await browser.newPage();
@@ -124,12 +108,7 @@ async function extractStreamUrl(pageUrl, mdstrmId = null) {
     page.on('request', (req) => {
       const type = req.resourceType();
       const url = req.url();
-
-      if (['image', 'stylesheet', 'font', 'media'].includes(type)) {
-        req.abort();
-        return;
-      }
-
+      if (['image', 'stylesheet', 'font', 'media'].includes(type)) { req.abort(); return; }
       if (url.includes('mdstrm.com') && url.includes('.m3u8')) {
         if (!mdstrmId || url.includes(mdstrmId)) {
           if (!capturedUrl) {
@@ -138,7 +117,6 @@ async function extractStreamUrl(pageUrl, mdstrmId = null) {
           }
         }
       }
-
       req.continue();
     });
 
@@ -146,7 +124,7 @@ async function extractStreamUrl(pageUrl, mdstrmId = null) {
       const url = res.url();
       if (url.includes('mdstrm.com') && url.includes('.m3u8') && !capturedUrl) {
         if (!mdstrmId || url.includes(mdstrmId)) {
-          console.log(`[Scraper] ✅ En response: ${url.substring(0, 80)}...`);
+          console.log(`[Scraper] ✅ Response: ${url.substring(0, 80)}...`);
           capturedUrl = url;
         }
       }
@@ -160,11 +138,9 @@ async function extractStreamUrl(pageUrl, mdstrmId = null) {
     await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 30000 });
 
     if (!capturedUrl) {
-      console.log('[Scraper] Esperando que el player inicie...');
+      console.log('[Scraper] Esperando player...');
       await new Promise((resolve) => {
-        const interval = setInterval(() => {
-          if (capturedUrl) { clearInterval(interval); resolve(); }
-        }, 500);
+        const interval = setInterval(() => { if (capturedUrl) { clearInterval(interval); resolve(); } }, 500);
         setTimeout(() => { clearInterval(interval); resolve(); }, 15000);
       });
     }
