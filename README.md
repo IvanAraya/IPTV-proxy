@@ -1,4 +1,4 @@
-# 📡 mdstrm-proxy
+# 📡 iptv-proxy
 
 Proxy que obtiene tokens de autenticación de **mdstrm.com** automáticamente y sirve los streams de canales chilenos como URLs estables para reproductores IPTV como OTTPlayer, TiViMate o VLC.
 

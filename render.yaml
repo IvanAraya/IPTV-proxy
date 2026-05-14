@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: mdstrm-proxy
+    name: iptv-proxy
     env: node
     region: oregon        # Más cercano a Chile para menor latencia
     plan: free
