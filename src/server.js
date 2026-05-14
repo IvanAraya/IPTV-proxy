@@ -147,7 +147,6 @@ app.get('/playlist.m3u8', (req, res) => {
     lines.push(
       `#EXTINF:-1 tvg-id="${id}" tvg-name="${ch.name}" tvg-logo="${ch.logo || ''}" tvg-country="CL" tvg-language="Spanish" group-title="${ch.group}",${ch.name}`
     );
-    lines.push(`#EXTVLCOPT:network-caching=1000`);
     lines.push(streamUrl);
     lines.push('');
   }
