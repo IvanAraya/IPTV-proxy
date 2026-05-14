@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const axios = require('axios');
 const CHANNELS = require('./channels');
 const { extractStreamUrl, buildFallbackUrl } = require('./scraper');
 const {
@@ -73,7 +74,43 @@ async function getStreamUrl(channelId) {
 }
 
 // ─────────────────────────────────────────────
-// RUTA: /stream/:channelId — redirige al stream real
+// HELPER: proxy del m3u8 (evita redirect que algunos players no siguen)
+// Descarga el m3u8, reescribe URLs relativas a absolutas y lo devuelve.
+// ─────────────────────────────────────────────
+async function proxyM3u8(res, streamUrl) {
+  try {
+    const response = await axios.get(streamUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+      },
+      timeout: 10000,
+      responseType: 'text',
+    });
+
+    const baseUrl = streamUrl.substring(0, streamUrl.lastIndexOf('/') + 1);
+    const rewritten = response.data
+      .split('\n')
+      .map((line) => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('#') || trimmed === '') return line;
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return line;
+        return baseUrl + trimmed;
+      })
+      .join('\n');
+
+    res.setHeader('Content-Type', 'application/x-mpegurl');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(rewritten);
+    return true;
+  } catch (err) {
+    console.warn(`[Proxy] No se pudo descargar m3u8, usando redirect: ${err.message}`);
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────
+// RUTA: /stream/:channelId — sirve el m3u8 directamente (o redirige como fallback)
 // ─────────────────────────────────────────────
 app.get('/stream/:channelId', async (req, res) => {
   const { channelId } = req.params;
@@ -87,8 +124,11 @@ app.get('/stream/:channelId', async (req, res) => {
     if (!url) {
       return res.status(503).json({ error: 'No se pudo obtener el stream' });
     }
-    console.log(`[${channelId}] → Redirect a: ${url.substring(0, 80)}...`);
-    res.redirect(302, url);
+    console.log(`[${channelId}] → Proxying: ${url.substring(0, 80)}...`);
+    const proxied = await proxyM3u8(res, url);
+    if (!proxied) {
+      res.redirect(302, url);
+    }
   } catch (err) {
     console.error(`[${channelId}] Error inesperado:`, err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
