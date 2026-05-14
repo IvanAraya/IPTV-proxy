@@ -2,13 +2,15 @@ services:
   - type: web
     name: iptv-proxy
     env: node
-    region: oregon        # Más cercano a Chile para menor latencia
-    plan: free
-    buildCommand: npm install
-    startCommand: node src/server.js
     nodeVersion: 20.19.2
+    region: oregon
+    plan: free
+    buildCommand: npm install && node scripts/install-browser.js
+    startCommand: node src/server.js
     envVars:
       - key: PORT
         value: 10000
+      - key: PUPPETEER_CACHE_DIR
+        value: /opt/render/.cache/puppeteer
     healthCheckPath: /api/status
     autoDeploy: true

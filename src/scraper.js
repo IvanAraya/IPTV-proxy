@@ -1,11 +1,8 @@
-const puppeteer = require('puppeteer-core');
-const { computeExecutablePath, resolveBuildId } = require('@puppeteer/browsers');
+const puppeteer = require('puppeteer');
+const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const CHROME_VERSION = '127';
-
-// Mismo directorio que usa install-browser.js
 const CACHE_DIR =
   process.env.PUPPETEER_CACHE_DIR ||
   (process.env.RENDER
@@ -13,41 +10,82 @@ const CACHE_DIR =
     : path.join(os.homedir(), '.cache', 'puppeteer'));
 
 let browserInstance = null;
-let executablePath = null;
 
-// Resuelve la ruta al ejecutable de Chrome descargado
-async function getExecutablePath() {
-  if (executablePath) return executablePath;
-
-  try {
-    const buildId = await resolveBuildId('chrome', process.platform, CHROME_VERSION);
-    executablePath = computeExecutablePath({
-      browser: 'chrome',
-      buildId,
-      cacheDir: CACHE_DIR,
-    });
-    console.log(`[Puppeteer] Chrome en: ${executablePath}`);
-    return executablePath;
-  } catch (err) {
-    console.error('[Puppeteer] No se pudo resolver la ruta de Chrome:', err.message);
-    return null;
+/**
+ * Busca el ejecutable de Chrome escaneando el directorio de caché.
+ * Esto evita depender de que resolveBuildId devuelva el build ID exacto.
+ */
+function findChromeExecutable() {
+  // 1. Variable de entorno explícita (máxima prioridad)
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    return process.env.PUPPETEER_EXECUTABLE_PATH;
   }
+
+  // 2. Ruta que puppeteer mismo conoce
+  try {
+    const execPath = puppeteer.executablePath();
+    if (execPath && fs.existsSync(execPath)) {
+      console.log(`[Puppeteer] Chrome encontrado via puppeteer.executablePath(): ${execPath}`);
+      return execPath;
+    }
+  } catch (_) {}
+
+  // 3. Buscar recursivamente en el cache dir
+  console.log(`[Puppeteer] Buscando Chrome en: ${CACHE_DIR}`);
+  const candidates = findFiles(CACHE_DIR, (f) =>
+    (f === 'chrome' || f === 'chrome.exe' || f === 'chromium' || f === 'chromium.exe') &&
+    !f.endsWith('.lock')
+  );
+
+  if (candidates.length > 0) {
+    // Ordenar descendente para preferir versiones más nuevas
+    candidates.sort().reverse();
+    const found = candidates[0];
+    console.log(`[Puppeteer] Chrome encontrado en filesystem: ${found}`);
+    return found;
+  }
+
+  return null;
 }
 
-// Reutilizar el mismo browser para no crear uno nuevo por request
+/**
+ * Recorre un directorio recursivamente buscando archivos que cumplan el predicado.
+ */
+function findFiles(dir, predicate, results = []) {
+  if (!fs.existsSync(dir)) return results;
+  try {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        findFiles(full, predicate, results);
+      } else if (predicate(entry.name)) {
+        // Verificar que sea ejecutable
+        try {
+          fs.accessSync(full, fs.constants.X_OK);
+          results.push(full);
+        } catch (_) {}
+      }
+    }
+  } catch (_) {}
+  return results;
+}
+
 async function getBrowser() {
   if (browserInstance && browserInstance.isConnected()) {
     return browserInstance;
   }
 
-  const chromePath = await getExecutablePath();
-  if (!chromePath) {
-    throw new Error('Chrome no disponible. Verifica que el postinstall se ejecutó correctamente.');
+  const executablePath = findChromeExecutable();
+  if (!executablePath) {
+    throw new Error(
+      `Chrome no encontrado en ${CACHE_DIR}. ` +
+      `Asegúrate de que el buildCommand incluye: node scripts/install-browser.js`
+    );
   }
 
-  console.log('[Puppeteer] Iniciando browser...');
+  console.log(`[Puppeteer] Lanzando Chrome: ${executablePath}`);
   browserInstance = await puppeteer.launch({
-    executablePath: chromePath,
+    executablePath,
     headless: true,
     args: [
       '--no-sandbox',
@@ -65,7 +103,7 @@ async function getBrowser() {
   });
 
   browserInstance.on('disconnected', () => {
-    console.log('[Puppeteer] Browser desconectado, se reiniciará en la próxima petición');
+    console.log('[Puppeteer] Browser desconectado');
     browserInstance = null;
   });
 
@@ -74,11 +112,6 @@ async function getBrowser() {
 
 /**
  * Extrae la URL m3u8 con token de una página que use el player de mdstrm.
- * Intercepta las peticiones de red para capturar la URL del playlist.
- *
- * @param {string} pageUrl - URL de la página del canal
- * @param {string|null} mdstrmId - ID conocido del stream en mdstrm (para filtrar)
- * @returns {Promise<string|null>} URL del m3u8 con token, o null si no se encontró
  */
 async function extractStreamUrl(pageUrl, mdstrmId = null) {
   const browser = await getBrowser();
@@ -92,17 +125,15 @@ async function extractStreamUrl(pageUrl, mdstrmId = null) {
       const type = req.resourceType();
       const url = req.url();
 
-      // Bloquear recursos innecesarios
       if (['image', 'stylesheet', 'font', 'media'].includes(type)) {
         req.abort();
         return;
       }
 
-      // Capturar URLs de mdstrm que sean playlists m3u8
       if (url.includes('mdstrm.com') && url.includes('.m3u8')) {
         if (!mdstrmId || url.includes(mdstrmId)) {
           if (!capturedUrl) {
-            console.log(`[Scraper] ✅ URL capturada: ${url.substring(0, 80)}...`);
+            console.log(`[Scraper] ✅ Capturada: ${url.substring(0, 80)}...`);
             capturedUrl = url;
           }
         }
@@ -115,7 +146,7 @@ async function extractStreamUrl(pageUrl, mdstrmId = null) {
       const url = res.url();
       if (url.includes('mdstrm.com') && url.includes('.m3u8') && !capturedUrl) {
         if (!mdstrmId || url.includes(mdstrmId)) {
-          console.log(`[Scraper] ✅ URL en response: ${url.substring(0, 80)}...`);
+          console.log(`[Scraper] ✅ En response: ${url.substring(0, 80)}...`);
           capturedUrl = url;
         }
       }
@@ -128,7 +159,6 @@ async function extractStreamUrl(pageUrl, mdstrmId = null) {
     console.log(`[Scraper] Cargando: ${pageUrl}`);
     await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 30000 });
 
-    // Esperar hasta 15 segundos adicionales para que el player inicie
     if (!capturedUrl) {
       console.log('[Scraper] Esperando que el player inicie...');
       await new Promise((resolve) => {
@@ -148,10 +178,6 @@ async function extractStreamUrl(pageUrl, mdstrmId = null) {
   }
 }
 
-/**
- * URL de fallback usando el ID de mdstrm sin token.
- * Algunos streams de mdstrm funcionan sin token.
- */
 function buildFallbackUrl(mdstrmId) {
   if (!mdstrmId) return null;
   return `https://mdstrm.com/live-stream-playlist/${mdstrmId}.m3u8`;
