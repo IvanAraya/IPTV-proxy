@@ -21,7 +21,7 @@ git init
 git add .
 git commit -m "Initial commit"
 # Crear un repo nuevo en github.com y luego:
-git remote add origin https://github.com/TU_USUARIO/mdstrm-proxy.git
+git remote add origin https://github.com/TU_USUARIO/iptv-proxy.git
 git push -u origin main
 ```
 
@@ -37,12 +37,12 @@ git push -u origin main
 
 Una vez que el deploy termine, Render te dará una URL como:
 ```
-https://mdstrm-proxy.onrender.com
+https://iptv-proxy.onrender.com
 ```
 
 Ve a **Environment → Environment Variables** y actualiza:
 ```
-BASE_URL = https://mdstrm-proxy.onrender.com
+BASE_URL = https://iptv-proxy.onrender.com
 ```
 
 Haz un nuevo deploy para que tome efecto.
