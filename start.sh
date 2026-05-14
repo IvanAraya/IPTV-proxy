@@ -3,22 +3,22 @@ set -e
 
 CACHE_DIR="${PUPPETEER_CACHE_DIR:-/opt/render/project/src/.cache/puppeteer}"
 
-echo "[start] PUPPETEER_CACHE_DIR=${PUPPETEER_CACHE_DIR}"
-echo "[start] CACHE_DIR=${CACHE_DIR}"
-
-CHROME_EXEC=$(node -e "const p=require('puppeteer');try{console.log(p.executablePath())}catch(e){console.log('')}" 2>/dev/null)
-echo "[start] executablePath esperado: ${CHROME_EXEC}"
-echo "[start] Existe: $([ -f "$CHROME_EXEC" ] && echo SI || echo NO)"
+CHROME_EXEC="${PUPPETEER_EXECUTABLE_PATH:-}"
 
 if [ -z "$CHROME_EXEC" ] || [ ! -f "$CHROME_EXEC" ]; then
-  echo "[start] Limpiando e instalando Chrome..."
-  rm -rf "$CACHE_DIR/chrome"
-  ./node_modules/.bin/puppeteer browsers install chrome 2>&1
-  echo "[start] Exit code: $?"
-  echo "[start] Contenido de $CACHE_DIR:"
-  find "$CACHE_DIR" -type f 2>/dev/null || echo "(vacío)"
+  echo "[start] Instalando chrome-headless-shell..."
+  rm -rf "$CACHE_DIR/chrome-headless-shell"
+  ./node_modules/.bin/puppeteer browsers install chrome-headless-shell
+
+  CHROME_EXEC=$(find "$CACHE_DIR" -name "chrome-headless-shell" -type f 2>/dev/null | head -1)
+  if [ -z "$CHROME_EXEC" ]; then
+    echo "[start] ERROR: chrome-headless-shell no encontrado tras instalación"
+    exit 1
+  fi
+  echo "[start] Instalado en: $CHROME_EXEC"
+  export PUPPETEER_EXECUTABLE_PATH="$CHROME_EXEC"
 else
-  echo "[start] Chrome ya disponible, saltando instalación"
+  echo "[start] chrome-headless-shell ya disponible: $CHROME_EXEC"
 fi
 
 echo "[start] Iniciando servidor..."

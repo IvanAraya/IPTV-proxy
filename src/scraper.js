@@ -44,7 +44,7 @@ function findChromeExecutable() {
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) {
           walk(full);
-        } else if (entry.name === 'chrome' || entry.name === 'chromium') {
+        } else if (entry.name === 'chrome' || entry.name === 'chromium' || entry.name === 'chrome-headless-shell') {
           try { fs.accessSync(full, fs.constants.X_OK); candidates.push(full); } catch (_) {}
         }
       }
