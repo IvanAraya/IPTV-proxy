@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mdstrm-proxy — Panel de Control</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f13;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    .container { max-width: 900px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .logo {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+
+    h1 { font-size: 22px; font-weight: 700; }
+    h1 span { color: #818cf8; }
+
+    .subtitle { font-size: 13px; color: #64748b; margin-top: 2px; }
+
+    /* Playlist URL box */
+    .playlist-box {
+      background: #1a1a2e;
+      border: 1px solid #2d2d44;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 28px;
+    }
+
+    .playlist-box label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #818cf8;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .url-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .url-input {
+      flex: 1;
+      background: #0f0f13;
+      border: 1px solid #2d2d44;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #e2e8f0;
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      outline: none;
+    }
+
+    .btn {
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #4f46e5; }
+    .btn:active { transform: scale(0.97); }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #4f46e5;
+      color: #818cf8;
+    }
+    .btn-outline:hover { background: #1e1b4b; }
+
+    /* Channels grid */
+    .section-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .channels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .channel-card {
+      background: #1a1a2e;
+      border: 1px solid #2d2d44;
+      border-radius: 12px;
+      padding: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .channel-card:hover { border-color: #4f46e5; }
+
+    .channel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .channel-logo {
+      width: 36px; height: 36px;
+      border-radius: 6px;
+      object-fit: contain;
+      background: #0f0f13;
+      padding: 2px;
+    }
+
+    .channel-logo-placeholder {
+      width: 36px; height: 36px;
+      border-radius: 6px;
+      background: #2d2d44;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    .channel-name { font-size: 15px; font-weight: 600; }
+    .channel-group { font-size: 11px; color: #64748b; margin-top: 1px; }
+
+    .channel-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+    }
+    .dot-green { background: #22c55e; box-shadow: 0 0 6px #22c55e66; }
+    .dot-yellow { background: #f59e0b; box-shadow: 0 0 6px #f59e0b66; }
+    .dot-red { background: #ef4444; box-shadow: 0 0 6px #ef444466; }
+    .dot-gray { background: #64748b; }
+
+    .channel-actions { display: flex; gap: 6px; }
+
+    .ttl-badge {
+      font-size: 11px;
+      color: #64748b;
+      margin-left: auto;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: #22c55e;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: #ef4444; }
+
+    .loading { display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: #334155;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #1e293b;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">📡</div>
+    <div>
+      <h1>mdstrm<span>-proxy</span></h1>
+      <p class="subtitle">Proxy de tokens para canales chilenos · mdstrm.com</p>
+    </div>
+  </header>
+
+  <!-- Playlist URL -->
+  <div class="playlist-box">
+    <label>🎬 URL de la lista M3U para OTTPlayer / Tivimate / VLC</label>
+    <div class="url-row">
+      <input class="url-input" id="playlistUrl" readonly />
+      <button class="btn" onclick="copyPlaylist()">Copiar</button>
+      <a id="downloadBtn" class="btn btn-outline" href="#" download="chile-tv.m3u8">⬇</a>
+    </div>
+  </div>
+
+  <!-- Channels -->
+  <div class="section-title">Canales disponibles</div>
+  <div class="channels-grid" id="channelsGrid">
+    <div style="color:#64748b;font-size:13px;padding:20px">Cargando canales...</div>
+  </div>
+
+  <footer>
+    mdstrm-proxy · Los tokens se renuevan automáticamente cada 45 min
+  </footer>
+
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script>
+const BASE = window.location.origin;
+
+// Set playlist URL
+document.getElementById('playlistUrl').value = BASE + '/playlist.m3u8';
+document.getElementById('downloadBtn').href = BASE + '/playlist.m3u8';
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+function copyPlaylist() {
+  navigator.clipboard.writeText(BASE + '/playlist.m3u8')
+    .then(() => showToast('✅ URL copiada al portapapeles'))
+    .catch(() => showToast('Error al copiar', true));
+}
+
+function getStatusInfo(ch) {
+  if (ch.type === 'direct') {
+    return { dot: 'dot-green', text: 'URL directa (siempre activa)' };
+  }
+  if (ch.cached && ch.ttlSeconds > 300) {
+    const min = Math.floor(ch.ttlSeconds / 60);
+    return { dot: 'dot-green', text: `Token activo · expira en ${min} min` };
+  }
+  if (ch.cached && ch.ttlSeconds > 0) {
+    return { dot: 'dot-yellow', text: `Token expirando pronto (${ch.ttlSeconds}s)` };
+  }
+  return { dot: 'dot-red', text: 'Sin token · se obtiene al reproducir' };
+}
+
+async function loadChannels() {
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    const grid = document.getElementById('channelsGrid');
+    grid.innerHTML = '';
+
+    for (const ch of data.channels) {
+      const status = getStatusInfo(ch);
+      const logo = ch.logo
+        ? `<img class="channel-logo" src="${ch.logo}" alt="${ch.name}" onerror="this.style.display='none'">`
+        : `<div class="channel-logo-placeholder">📺</div>`;
+
+      const refreshBtn = ch.type !== 'direct'
+        ? `<button class="btn btn-sm btn-outline" onclick="refreshChannel('${ch.id}', this)">🔄 Renovar token</button>`
+        : '';
+
+      grid.innerHTML += `
+        <div class="channel-card" id="card-${ch.id}">
+          <div class="channel-header">
+            ${logo}
+            <div>
+              <div class="channel-name">${ch.name}</div>
+              <div class="channel-group">${ch.group}</div>
+            </div>
+          </div>
+          <div class="channel-status">
+            <div class="dot ${status.dot}"></div>
+            <span>${status.text}</span>
+          </div>
+          <div class="channel-actions">
+            <button class="btn btn-sm" onclick="copyUrl('${ch.streamUrl}')">📋 Copiar URL</button>
+            ${refreshBtn}
+          </div>
+        </div>`;
+    }
+  } catch (e) {
+    document.getElementById('channelsGrid').innerHTML =
+      '<div style="color:#ef4444;font-size:13px;padding:20px">Error cargando canales</div>';
+  }
+}
+
+function copyUrl(url) {
+  navigator.clipboard.writeText(url)
+    .then(() => showToast('✅ URL del canal copiada'))
+    .catch(() => showToast('Error al copiar', true));
+}
+
+async function refreshChannel(id, btn) {
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Obteniendo token...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/api/refresh/${id}`, { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      showToast(`✅ Token renovado para ${id}`);
+      loadChannels();
+    } else {
+      showToast(`❌ Error: ${data.error}`, true);
+    }
+  } catch (e) {
+    showToast('Error de red', true);
+  } finally {
+    btn.textContent = orig;
+    btn.disabled = false;
+  }
+}
+
+// Cargar al iniciar y cada 2 minutos
+loadChannels();
+setInterval(loadChannels, 120000);
+</script>
+</body>
+</html>

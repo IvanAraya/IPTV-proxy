@@ -1,0 +1,150 @@
+// Definición de canales y sus páginas fuente
+// El proxy visita estas URLs para extraer el token de mdstrm
+
+const CHANNELS = {
+  tvn: {
+    name: 'TVN',
+    group: 'Abierta',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/3/33/Logotipo_de_Televisi%C3%B2n_Nacional_de_Chile.svg',
+    sourceUrl: 'https://www.tvn.cl/en-vivo',
+    // ID conocido de mdstrm para TVN — se usa como fallback si el scraping falla
+    mdstrmId: '57a498c4d7b86d600e5461cb',
+  },
+  ntv: {
+    name: 'NTV',
+    group: 'Cultura',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Logotipo_de_NTV.svg',
+    sourceUrl: 'https://www.tvn.cl/ntv',
+    mdstrmId: '5aaabe9e2c56420918184c6d',
+  },
+  '24horas': {
+    name: '24 Horas',
+    group: 'Noticias',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Logo_Canal_24_Horas.png',
+    sourceUrl: 'https://www.24horas.cl/envivo',
+    mdstrmId: '57d1a22064f5d85712b20dab',
+  },
+  tvn3: {
+    name: 'TVN3',
+    group: 'Abierta',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/c/ca/TVN_3_2023.svg',
+    sourceUrl: 'https://www.tvn.cl/tvn3',
+    mdstrmId: '5653641561b4eba30a7e4929.',
+  },
+  tvchile: {
+    name: 'TV Chile',
+    group: 'Abierta',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/4/48/Logotipo_de_TV_Chile.svg',
+    sourceUrl: 'https://www.tvn.cl/tvchile',
+    mdstrmId: '533adcc949386ce765657d7c',
+  },
+  mega: {
+    name: 'Mega',
+    group: 'Abierta',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Logotipo_de_Mega_%282020-%29.svg',
+    sourceUrl: 'https://www.mega.cl/senal-en-vivo/',
+    mdstrmId: '53d2c1a32640614e62a0e000',
+  },
+  meganoticias: {
+    name: 'Meganoticias',
+    group: 'Noticias',
+    logo: 'https://static2-meganoticias.cdn.mdstrm.com/_common/images/logo-meganoticias-whitetext.svg?=20190705',
+    sourceUrl: 'https://www.meganoticias.cl/senal-en-vivo/meganoticias/',
+    mdstrmId: '561430ae330428c223687e1e',
+  },
+  megatiempo: {
+    name: 'Megatiempo',
+    group: 'Noticias',
+    logo: 'https://static.megatiempo.cl/_common/images/meta/megatiempo-rrss.jpg',
+    sourceUrl: 'https://www.megatiempo.cl/senal-en-vivo/',
+    mdstrmId: '56f97fc0b9bb39786b04a3b0', // Se obtiene solo por scraping
+  },
+  canal13: {
+    name: 'Canal 13',
+    group: 'Abierta',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Teletrece2025.png',
+    // Canal 13 usa DPS, no mdstrm — URL directa estable
+    directUrl: 'https://redirector.dps.live/hls/13cl/playlist.m3u8',
+  },
+  t13: {
+    name: 'T13',
+    group: 'Noticias',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Teletrece2025.png',
+    // Canal 13 usa DPS, no mdstrm — URL directa estable
+    directUrl: 'https://redirector.rudo.video/hls-video/10b92cafdf3646cbc1e727f3dc76863621a327fd/t13/t13.smil/playlist.m3u8',
+  },
+  chv: {
+    name: 'CHV',
+    group: 'Abierta',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/2/27/Logotipo_Principal_de_Chilevisi%C3%B3n.svg',
+    directUrl: 'https://redirector.rudo.video/hls-video/10b92cafdf3646cbc1e727f3dc76863621a327fd/chv/chv.smil/playlist.m3u8',
+  },
+  chvn: {
+    name: 'CHV Noticias',
+    group: 'Noticias',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/CHV_Noticias_2018.png',
+    directUrl: 'https://redirector.rudo.video/hls-video/339f69c6122f6d8f4574732c235f09b7683e31a5/chvn/chvn.smil/playlist.m3u8',
+  },
+  chvdeportes: {
+    name: 'CHV Deportes',
+    group: 'Deportes',
+    logo: null,
+    directUrl: 'https://redirector.rudo.video/hls-video/10b92cafdf3646cbc1e727f3dc76863621a327fd/chvdeportes/chvdeportes.smil/playlist.m3u8',
+  },
+  uchiletv: {
+    name: 'Uchile TV',
+    group: 'Cultura',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e9/UChile_TV_logo_2020.png',
+    directUrl: 'https://unlimited1-cl-isp.dps.live/uchiletv/uchiletv.smil/playlist.m3u8',
+  },
+  red: {
+    name: 'La Red',
+    group: 'Abierta',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/1/10/La_Red_Logotipo_2021.svg',
+    directUrl: 'https://d2qsan2ut81n2k.cloudfront.net/live/5d5c158e-721f-46d5-b375-d62875636b41/ts:abr.m3u8',
+  },
+  ucv: {
+    name: 'UCV',
+    group: 'Cultura',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/UCV_%28but%2C_better_quality%29.png',
+    directUrl: 'https://unlimited1-cl-isp.dps.live/ucvtv2/ucvtv2.smil/playlist.m3u8',
+  },
+  ucv2: {
+    name: 'UCV2',
+    group: 'Cultura',
+    logo: null,
+    directUrl: 'https://unlimited1-cl-isp.dps.live/ucvtveventos/ucvtveventos.smil/playlist.m3u8',
+  },
+  dw: {
+    name: 'DW Español',
+    group: 'Cultura',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Deutsche_Welle_Logo.svg',
+    directUrl: 'https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/master.m3u8',
+  },
+  sportinghd: {
+    name: 'Valparaiso Sporting',
+    group: 'Deportes',
+    logo: 'https://www.sporting.cl/sporting/imag/v1/icon/logo_home.png',
+    directUrl: 'https://unlimited2-cl-isp.dps.live/sportinghd/sportinghd.smil/playlist.m3u8',
+  },
+  teletrack: {
+    name: 'Teletrack',
+    group: 'Deportes',
+    logo: 'https://teletrak.cl/wp-content/uploads/2025/09/TELETRAK-LOGO-MAID-02.png',
+    directUrl: 'https://teletraktv.janus.cl/playlist/stream.m3u8',
+  },
+  tvturf: {
+    name: 'TV Turf',
+    group: 'Deportes',
+    logo: 'https://tvturf.cl/tvturf/site/artic/20181221/imag/foto_0000001320181221154000/Sin_titulo-1.png',
+    directUrl: 'https://tvturf4.janus.cl/playlist/stream.m3u8',
+  },
+  energeek: {
+    name: 'Energeek Retro',
+    group: 'Abierta',
+    logo: 'https://cdn.energeek.cl/logos/EG-Retro-2025_brand.png',
+    directUrl: 'https://backend.energeek.cl/webtv/egretroweb/index.m3u8?token=D3m0M3UCLWeb&PlaylistM3UCL',
+  },
+};
+
+module.exports = CHANNELS;
