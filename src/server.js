@@ -123,7 +123,7 @@ app.get('/playlist.m3u8', (req, res) => {
   const lines = ['#EXTM3U x-tvg-url="https://iptv-org.github.io/epg/guides/cl/programas.cl.epg.xml"', ''];
 
   for (const [id, ch] of Object.entries(CHANNELS)) {
-    const streamUrl = `${baseUrl}/stream/${id}`;
+    const streamUrl = ch.directUrl || `${baseUrl}/stream/${id}`;
     lines.push(
       `#EXTINF:-1 tvg-id="${id}" tvg-name="${ch.name}" tvg-logo="${ch.logo || ''}" tvg-country="CL" tvg-language="Spanish" ,${ch.name}`
     );
