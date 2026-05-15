@@ -62,12 +62,12 @@ const CHANNELS = {
     name: 'Megatiempo',
     group: 'Noticias',
     logo: 'https://static.megatiempo.cl/_common/images/meta/megatiempo-rrss.jpg',
-    //directUrl: 'https://mdstrm.com/live-stream-playlist/56f97fc0b9bb39786b04a3b0.m3u8',
     mdstrmId: '56f97fc0b9bb39786b04a3b0',
     tokenConfig: {
       type: 'mega-api',
       url: 'https://www.megatiempo.cl/senal-en-vivo/',
-      player: '56f97fc0b9bb39786b04a3b0',
+      player: '654a6e481633b7487eb2b6b8',
+      insecure: true,
     },
   },
   canal13: {
