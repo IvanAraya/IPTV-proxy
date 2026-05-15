@@ -1,76 +1,85 @@
-// Definición de canales y sus páginas fuente
-// El proxy visita estas URLs para extraer el token de mdstrm
-
 const CHANNELS = {
   tvn: {
     name: 'TVN',
     group: 'Abierta',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/3/33/Logotipo_de_Televisi%C3%B2n_Nacional_de_Chile.svg',
-    sourceUrl: 'https://www.tvn.cl/en-vivo',
-    // ID conocido de mdstrm para TVN — se usa como fallback si el scraping falla
     mdstrmId: '57a498c4d7b86d600e5461cb',
+    tokenConfig: {
+      type: 'html-regex',
+      url: 'https://live.tvn.cl',
+      referer: 'https://www.tvn.cl/en-vivo',
+      pattern: /access_token:\s*'([^']+)'/,
+      player: '57f40bb4dc5b9f3075c49cfe',
+    },
   },
   ntv: {
     name: 'NTV',
     group: 'Cultura',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Logotipo_de_NTV.svg',
-    sourceUrl: 'https://www.tvn.cl/ntv',
-    mdstrmId: '5aaabe9e2c56420918184c6d',
+    directUrl: 'https://mdstrm.com/live-stream-playlist/5aaabe9e2c56420918184c6d.m3u8',
   },
   '24horas': {
     name: '24 Horas',
     group: 'Noticias',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Logo_Canal_24_Horas.png',
-    sourceUrl: 'https://www.24horas.cl/envivo',
-    mdstrmId: '57d1a22064f5d85712b20dab',
+    directUrl: 'https://mdstrm.com/live-stream-playlist/57d1a22064f5d85712b20dab.m3u8',
   },
   tvn3: {
     name: 'TVN3',
     group: 'Abierta',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/c/ca/TVN_3_2023.svg',
-    sourceUrl: 'https://www.tvn.cl/tvn3',
-    mdstrmId: '5653641561b4eba30a7e4929.',
+    directUrl: 'https://mdstrm.com/live-stream-playlist/5653641561b4eba30a7e4929.m3u8',
   },
   tvchile: {
     name: 'TV Chile',
     group: 'Abierta',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/4/48/Logotipo_de_TV_Chile.svg',
-    sourceUrl: 'https://www.tvn.cl/tvchile',
-    mdstrmId: '533adcc949386ce765657d7c',
+    directUrl: 'https://mdstrm.com/live-stream-playlist/533adcc949386ce765657d7c.m3u8',
   },
   mega: {
     name: 'Mega',
     group: 'Abierta',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Logotipo_de_Mega_%282020-%29.svg',
-    sourceUrl: 'https://www.mega.cl/senal-en-vivo/',
     mdstrmId: '53d2c1a32640614e62a0e000',
+    tokenConfig: {
+      type: 'mega-api',
+      url: 'https://www.mega.cl/senal-en-vivo/',
+      player: '5e5597b9171de20f8f30667a',
+    },
   },
   meganoticias: {
     name: 'Meganoticias',
     group: 'Noticias',
     logo: 'https://static2-meganoticias.cdn.mdstrm.com/_common/images/logo-meganoticias-whitetext.svg?=20190705',
-    sourceUrl: 'https://www.meganoticias.cl/senal-en-vivo/meganoticias/',
     mdstrmId: '561430ae330428c223687e1e',
+    tokenConfig: {
+      type: 'mega-api',
+      url: 'https://www.meganoticias.cl/senal-en-vivo/meganoticias/',
+      player: '5d5eab33a0f31f0722f36867',
+    },
   },
   megatiempo: {
     name: 'Megatiempo',
     group: 'Noticias',
     logo: 'https://static.megatiempo.cl/_common/images/meta/megatiempo-rrss.jpg',
-    sourceUrl: 'https://www.megatiempo.cl/senal-en-vivo/',
-    mdstrmId: '56f97fc0b9bb39786b04a3b0', // Se obtiene solo por scraping
+    //directUrl: 'https://mdstrm.com/live-stream-playlist/56f97fc0b9bb39786b04a3b0.m3u8',
+    mdstrmId: '56f97fc0b9bb39786b04a3b0',
+    tokenConfig: {
+      type: 'mega-api',
+      url: 'https://www.megatiempo.cl/senal-en-vivo/',
+      player: '56f97fc0b9bb39786b04a3b0',
+    },
   },
   canal13: {
     name: 'Canal 13',
     group: 'Abierta',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Teletrece2025.png',
-    // Canal 13 usa DPS, no mdstrm — URL directa estable
     directUrl: 'https://redirector.dps.live/hls/13cl/playlist.m3u8',
   },
   t13: {
     name: 'T13',
     group: 'Noticias',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Teletrece2025.png',
-    // Canal 13 usa DPS, no mdstrm — URL directa estable
     directUrl: 'https://redirector.rudo.video/hls-video/10b92cafdf3646cbc1e727f3dc76863621a327fd/t13/t13.smil/playlist.m3u8',
   },
   chv: {

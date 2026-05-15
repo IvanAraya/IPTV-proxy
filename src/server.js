@@ -51,16 +51,20 @@ async function getStreamUrl(channelId) {
     return getCachedUrl(channelId) || buildFallbackUrl(channel.mdstrmId);
   }
 
-  // Iniciar scraping
-  console.log(`[${channelId}] 🔄 Iniciando scraping...`);
+  // Iniciar fetch de token
+  console.log(`[${channelId}] 🔄 Obteniendo token...`);
   const refreshPromise = (async () => {
     try {
-      const url = await extractStreamUrl(channel.sourceUrl, channel.mdstrmId);
+      const url = await extractStreamUrl(
+        channel.tokenConfig?.url,
+        channel.mdstrmId,
+        channel.tokenConfig
+      );
       if (url) {
         setCachedUrl(channelId, url);
         return url;
       }
-      console.warn(`[${channelId}] ⚠️ Scraping falló, usando fallback`);
+      console.warn(`[${channelId}] ⚠️ Sin URL, usando fallback`);
       return buildFallbackUrl(channel.mdstrmId);
     } catch (err) {
       console.error(`[${channelId}] Error:`, err.message);
@@ -156,7 +160,11 @@ app.post('/api/refresh/:channelId', async (req, res) => {
   }
 
   try {
-    const url = await extractStreamUrl(channel.sourceUrl, channel.mdstrmId);
+    const url = await extractStreamUrl(
+      channel.tokenConfig?.url,
+      channel.mdstrmId,
+      channel.tokenConfig
+    );
     if (url) {
       setCachedUrl(channelId, url);
       res.json({ ok: true, url: url.substring(0, 100) + '...' });
@@ -171,7 +179,7 @@ app.post('/api/refresh/:channelId', async (req, res) => {
 // ─────────────────────────────────────────────
 // RUTA: / — panel web
 // ─────────────────────────────────────────────
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 

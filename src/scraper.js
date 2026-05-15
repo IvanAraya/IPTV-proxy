@@ -1,157 +1,69 @@
-const puppeteer = require('puppeteer');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const axios = require('axios');
 
-const CACHE_DIR =
-  process.env.PUPPETEER_CACHE_DIR ||
-  (process.env.RENDER
-    ? '/opt/render/project/src/.cache/puppeteer'
-    : path.join(os.homedir(), '.cache', 'puppeteer'));
+const UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36';
 
-let browserInstance = null;
+const http = axios.create({
+  timeout: 15000,
+  headers: { 'User-Agent': UA },
+});
 
-/**
- * Busca el ejecutable de Chrome en el cache dir recursivamente.
- * Evita depender de resolveBuildId que puede calcular un path distinto al real.
- */
-function findChromeExecutable() {
-  // 1. Variable de entorno explícita
-  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-    console.log(`[Puppeteer] Usando PUPPETEER_EXECUTABLE_PATH: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
-    return process.env.PUPPETEER_EXECUTABLE_PATH;
-  }
-
-  // 2. puppeteer.executablePath() — sabe exactamente dónde instaló Chrome
-  try {
-    const execPath = puppeteer.executablePath();
-    if (execPath && fs.existsSync(execPath)) {
-      console.log(`[Puppeteer] Chrome via executablePath(): ${execPath}`);
-      return execPath;
-    }
-    console.warn(`[Puppeteer] executablePath() devolvió ${execPath} pero no existe`);
-  } catch (e) {
-    console.warn(`[Puppeteer] executablePath() falló: ${e.message}`);
-  }
-
-  // 3. Búsqueda recursiva en el filesystem
-  console.log(`[Puppeteer] Buscando Chrome en: ${CACHE_DIR}`);
-  const candidates = [];
-  function walk(dir) {
-    if (!fs.existsSync(dir)) return;
-    try {
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          walk(full);
-        } else if (entry.name === 'chrome' || entry.name === 'chromium' || entry.name === 'chrome-headless-shell') {
-          try { fs.accessSync(full, fs.constants.X_OK); candidates.push(full); } catch (_) {}
-        }
-      }
-    } catch (_) {}
-  }
-  walk(CACHE_DIR);
-
-  if (candidates.length > 0) {
-    candidates.sort().reverse();
-    console.log(`[Puppeteer] Chrome encontrado: ${candidates[0]}`);
-    return candidates[0];
-  }
-
-  return null;
+async function getTokenFromHtml(url, referer, pattern) {
+  const res = await http.get(url, { headers: { Referer: referer } });
+  const m = res.data.match(pattern);
+  return m ? m[1] : null;
 }
 
-async function getBrowser() {
-  if (browserInstance && browserInstance.isConnected()) return browserInstance;
+async function getTokenMegaApi(pageUrl, mdstrmId) {
+  const pageRes = await http.get(pageUrl);
+  const keyMatch = pageRes.data.match(/serverKey\s*:\s*'([^']+)'/);
+  if (!keyMatch) throw new Error(`[Scraper] serverKey no encontrado en ${pageUrl}`);
+  const serverKey = keyMatch[1];
 
-  const executablePath = findChromeExecutable();
-  if (!executablePath) {
-    throw new Error(
-      `Chrome no encontrado en ${CACHE_DIR}.\n` +
-      `El buildCommand debe incluir: npx puppeteer browsers install chrome`
-    );
+  const origin = new URL(pageUrl).origin;
+  const apiHost = origin.replace('www.', '').replace('https://', '');
+  const apiUrl = `https://api.${apiHost}/api/v1/mdstrm`;
+
+  const res = await http.get(apiUrl, {
+    params: { id: mdstrmId, type: 'live', process: 'access_token', key: serverKey, ua: UA },
+    headers: { Referer: pageUrl, Origin: origin },
+  });
+
+  if (!res.data || !res.data.access_token) {
+    throw new Error(`[Scraper] API no devolvió access_token para ${mdstrmId}`);
   }
-
-  console.log(`[Puppeteer] Lanzando browser...`);
-  browserInstance = await puppeteer.launch({
-    executablePath,
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process',
-      '--disable-extensions',
-      '--mute-audio',
-    ],
-  });
-
-  browserInstance.on('disconnected', () => {
-    console.log('[Puppeteer] Browser desconectado');
-    browserInstance = null;
-  });
-
-  return browserInstance;
+  return res.data.access_token;
 }
 
-async function extractStreamUrl(pageUrl, mdstrmId = null) {
-  const browser = await getBrowser();
-  const page = await browser.newPage();
-  let capturedUrl = null;
+async function extractStreamUrl(pageUrl, mdstrmId, tokenConfig) {
+  if (!tokenConfig) {
+    console.log(`[Scraper] Canal libre: ${mdstrmId}`);
+    return buildFallbackUrl(mdstrmId);
+  }
+
+  const { type, referer, pattern, player } = tokenConfig;
+  let token = null;
 
   try {
-    await page.setRequestInterception(true);
-
-    page.on('request', (req) => {
-      const type = req.resourceType();
-      const url = req.url();
-      if (['image', 'stylesheet', 'font', 'media'].includes(type)) { req.abort(); return; }
-      if (url.includes('mdstrm.com') && url.includes('.m3u8')) {
-        if (!mdstrmId || url.includes(mdstrmId)) {
-          if (!capturedUrl) {
-            console.log(`[Scraper] ✅ Capturada: ${url.substring(0, 80)}...`);
-            capturedUrl = url;
-          }
-        }
-      }
-      req.continue();
-    });
-
-    page.on('response', (res) => {
-      const url = res.url();
-      if (url.includes('mdstrm.com') && url.includes('.m3u8') && !capturedUrl) {
-        if (!mdstrmId || url.includes(mdstrmId)) {
-          console.log(`[Scraper] ✅ Response: ${url.substring(0, 80)}...`);
-          capturedUrl = url;
-        }
-      }
-    });
-
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36'
-    );
-
-    console.log(`[Scraper] Cargando: ${pageUrl}`);
-    await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-
-    if (!capturedUrl) {
-      console.log('[Scraper] Esperando player...');
-      await new Promise((resolve) => {
-        const interval = setInterval(() => { if (capturedUrl) { clearInterval(interval); resolve(); } }, 500);
-        setTimeout(() => { clearInterval(interval); resolve(); }, 15000);
-      });
+    if (type === 'html-regex') {
+      console.log(`[Scraper] Obteniendo token HTML de ${pageUrl}`);
+      token = await getTokenFromHtml(pageUrl, referer, pattern);
+    } else if (type === 'mega-api') {
+      console.log(`[Scraper] Obteniendo token Mega de ${pageUrl}`);
+      token = await getTokenMegaApi(pageUrl, mdstrmId);
     }
-
-    return capturedUrl;
   } catch (err) {
-    console.error(`[Scraper] Error en ${pageUrl}:`, err.message);
-    return null;
-  } finally {
-    await page.close();
+    console.error(`[Scraper] Error obteniendo token: ${err.message}`);
   }
+
+  if (!token) {
+    console.warn(`[Scraper] Sin token, usando fallback para ${mdstrmId}`);
+    return buildFallbackUrl(mdstrmId);
+  }
+
+  const url = `https://mdstrm.com/live-stream-playlist/${mdstrmId}.m3u8?access_token=${token}${player ? `&player=${player}` : ''}`;
+  console.log(`[Scraper] ✅ URL construida para ${mdstrmId}`);
+  return url;
 }
 
 function buildFallbackUrl(mdstrmId) {
