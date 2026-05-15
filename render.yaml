@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: iptv-proxy
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /api/status
