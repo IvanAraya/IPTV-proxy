@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const axios = require('axios');
+
 const CHANNELS = require('./channels');
 const { extractStreamUrl, buildFallbackUrl } = require('./scraper');
 const {
@@ -78,7 +78,7 @@ async function getStreamUrl(channelId) {
 }
 
 // ─────────────────────────────────────────────
-// RUTA: /stream/:channelId — sirve el m3u8 directamente
+// RUTA: /stream/:channelId
 // ─────────────────────────────────────────────
 app.get('/stream/:channelId', async (req, res) => {
   const { channelId } = req.params;
@@ -94,23 +94,15 @@ app.get('/stream/:channelId', async (req, res) => {
       return res.status(503).json({ error: 'No se pudo obtener el stream' });
     }
 
-    // Obtener el m3u8 siguiendo todos los redirects y devolverlo directamente.
-    // Esto evita que los players (OTT Player, Tivimate, etc.) fallen al manejar
-    // cadenas de múltiples redirects (proxy → mdstrm → CDN).
-    console.log(`[${channelId}] → Proxy m3u8: ${url.substring(0, 80)}...`);
-    const m3u8 = await axios.get(url, {
-      maxRedirects: 10,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
-      },
-      responseType: 'text',
-    });
-
+    // Devolver un master playlist HLS mínimo que apunta a la URL real.
+    // El player descarga el stream desde su propia IP (Chile), evitando el
+    // geo-bloqueo que mdstrm aplica a las IPs de Render.com (EE.UU.).
+    console.log(`[${channelId}] → ${url.substring(0, 80)}...`);
     res.setHeader('Content-Type', 'application/x-mpegurl');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.send(m3u8.data);
+    res.send(`#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=4000000\n${url}\n`);
   } catch (err) {
-    console.error(`[${channelId}] Error inesperado:`, err.message);
+    console.error(`[${channelId}] Error:`, err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
