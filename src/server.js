@@ -117,7 +117,8 @@ app.get('/playlist.m3u8', (req, res) => {
   for (const [id, ch] of Object.entries(CHANNELS)) {
     const streamUrl = ch.directUrl || `${baseUrl}/stream/${id}`;
     lines.push(
-      `#EXTINF:-1 tvg-id="${id}" tvg-name="${ch.name}" tvg-logo="${ch.logo || ''}" tvg-country="CL" tvg-language="Spanish" ,${ch.name}`
+      //`#EXTINF:-1 tvg-id="${id}" tvg-name="${ch.name}" tvg-logo="${ch.logo || ''}" tvg-country="CL" tvg-language="Spanish" ,${ch.name}`
+      `#EXTINF:0, ${ch.name}`
     );
     lines.push(streamUrl);
     lines.push('');
