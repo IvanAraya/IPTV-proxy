@@ -111,7 +111,7 @@ app.get('/playlist.m3u8', (req, res) => {
   for (const [id, ch] of Object.entries(CHANNELS)) {
     const streamUrl = `${baseUrl}/stream/${id}`;
     lines.push(
-      `#EXTINF:-1 tvg-id="${id}" tvg-name="${ch.name}" tvg-logo="${ch.logo || ''}" tvg-country="CL" tvg-language="Spanish" group-title="${ch.group}",${ch.name}`
+      `#EXTINF:-1 tvg-id="${id}" tvg-name="${ch.name}" tvg-logo="${ch.logo || ''}" tvg-country="CL" tvg-language="Spanish" ,${ch.name}`
     );
     lines.push(streamUrl);
     lines.push('');
@@ -135,7 +135,7 @@ app.get('/api/status', (req, res) => {
       id,
       name: ch.name,
       logo: ch.logo || '',
-      group: ch.group,
+
       type: ch.directUrl ? 'direct' : 'mdstrm',
       cached: cacheInfo?.hasUrl || !!ch.directUrl,
       ttlSeconds: ttlMs ? Math.round(ttlMs / 1000) : ch.directUrl ? null : 0,
