@@ -94,13 +94,12 @@ app.get('/stream/:channelId', async (req, res) => {
       return res.status(503).json({ error: 'No se pudo obtener el stream' });
     }
 
-    // Devolver un master playlist HLS mínimo que apunta a la URL real.
-    // El player descarga el stream desde su propia IP (Chile), evitando el
-    // geo-bloqueo que mdstrm aplica a las IPs de Render.com (EE.UU.).
-    console.log(`[${channelId}] → ${url.substring(0, 80)}...`);
-    res.setHeader('Content-Type', 'application/x-mpegurl');
+    // Redirigir al player directo a la URL del stream.
+    // El player sigue la cadena de redirecciones desde su propia IP (Chile),
+    // evitando el geo-bloqueo que mdstrm aplica a las IPs de Render.com (EE.UU.).
+    console.log(`[${channelId}] → ${url}`);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.send(`#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=4000000\n${url}\n`);
+    res.redirect(302, url);
   } catch (err) {
     console.error(`[${channelId}] Error:`, err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
