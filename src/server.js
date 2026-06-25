@@ -28,20 +28,6 @@ function getBaseUrl(req) {
 
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Sigue un salto de redirect (mdstrm → CDN) en el servidor.
-// El player recibe la URL final del CDN directamente, evitando la cadena doble de redirects.
-async function resolveRedirect(url) {
-  try {
-    const res = await http.get(url, { maxRedirects: 0, validateStatus: () => true, timeout: 8000 });
-    if ((res.status === 301 || res.status === 302) && res.headers.location) {
-      return res.headers.location;
-    }
-  } catch (err) {
-    console.warn(`[resolveRedirect] Error: ${err.message}`);
-  }
-  return url;
-}
-
 // ─────────────────────────────────────────────
 // HELPER: obtener URL del stream (caché → scraping → fallback)
 // ─────────────────────────────────────────────
@@ -106,21 +92,29 @@ app.get('/stream/:channelId', async (req, res) => {
   }
 
   try {
-    const rawUrl = await getStreamUrl(channelId);
-    if (!rawUrl) {
+    const url = await getStreamUrl(channelId);
+    if (!url) {
       return res.status(503).json({ error: 'No se pudo obtener el stream' });
     }
 
-    // Para canales mdstrm: resolver el redirect de mdstrm → CDN en el servidor,
-    // así el player recibe la URL del CDN directamente (un solo hop en vez de dos).
-    const url = channel.directUrl ? rawUrl : await resolveRedirect(rawUrl);
-
-    console.log(`[${channelId}] → ${url}`);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.redirect(302, url);
+
+    if (channel.directUrl) {
+      // Canales con URL directa: redirigir (ya apunta al CDN correcto).
+      console.log(`[${channelId}] → redirect ${url}`);
+      return res.redirect(302, url);
+    }
+
+    // Canales mdstrm: el servidor sigue la cadena redirect y envía el contenido
+    // HLS directamente al player. Así el player no necesita seguir ningún redirect
+    // y el CDN nunca ve el User-Agent ni la IP del TV.
+    console.log(`[${channelId}] → proxy ${url.substring(0, 80)}...`);
+    const hls = await http.get(url, { responseType: 'stream', maxRedirects: 5, timeout: 10000 });
+    res.setHeader('Content-Type', hls.headers['content-type'] || 'application/vnd.apple.mpegurl');
+    hls.data.pipe(res);
   } catch (err) {
     console.error(`[${channelId}] Error:`, err.message);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    if (!res.headersSent) res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
