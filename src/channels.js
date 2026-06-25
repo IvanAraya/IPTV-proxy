@@ -63,7 +63,7 @@ const CHANNELS = {
     },
   },
   mega2: {
-    enabled: true,
+    enabled: false,
     name: 'Mega 2',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Logotipo_de_Mega_%282020-%29.svg',
     mdstrmId: '631a1d95d3d77c082535e614',
