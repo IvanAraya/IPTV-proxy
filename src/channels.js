@@ -106,7 +106,7 @@ const CHANNELS = {
   red: {
     name: 'La Red',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/1/10/La_Red_Logotipo_2021.svg',
-    directUrl: 'https://d2qsan2ut81n2k.cloudfront.net/live/5d5c158e-721f-46d5-b375-d62875636b41/ts:abr.m3u8',
+    directUrl: 'https://ds5i0a12qngha.cloudfront.net/ts:abr.m3u8',
   },
   ucv: {
     name: 'UCV',
