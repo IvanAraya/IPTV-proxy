@@ -63,7 +63,7 @@ const CHANNELS = {
     },
   },
   mega2: {
-    enabled: false,
+    enabled: true,
     name: 'Mega 2',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Logotipo_de_Mega_%282020-%29.svg',
     mdstrmId: '631a1d95d3d77c082535e614',
@@ -122,7 +122,7 @@ const CHANNELS = {
   },
   uchiletv: {
     enabled: true,
-    name: 'UCShile TV',
+    name: 'UChile TV',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e9/UChile_TV_logo_2020.png',
     directUrl: 'https://unlimited1-cl-isp.dps.live/uchiletv/uchiletv.smil/playlist.m3u8',
   },
