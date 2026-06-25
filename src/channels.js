@@ -24,6 +24,12 @@ const CHANNELS = {
       player: '57f40bb4dc5b9f3075c49cfe',
     },
   },
+  tvchile: {
+    enabled: true,
+    name: 'TV Chile',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/4/48/Logotipo_de_TV_Chile.svg',
+    directUrl: 'https://mdstrm.com/live-stream-playlist/533adcc949386ce765657d7c.m3u8',
+  },
   ntv: {
     enabled: true,
     name: 'NTV',
@@ -42,12 +48,6 @@ const CHANNELS = {
     logo: 'https://upload.wikimedia.org/wikipedia/commons/c/ca/TVN_3_2023.svg',
     directUrl: 'https://mdstrm.com/live-stream-playlist/5653641561b4eba30a7e4929.m3u8',
   },
-  tvchile: {
-    enabled: true,
-    name: 'TV Chile',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/4/48/Logotipo_de_TV_Chile.svg',
-    directUrl: 'https://mdstrm.com/live-stream-playlist/533adcc949386ce765657d7c.m3u8',
-  },
   mega: {
     enabled: true,
     name: 'Mega',
@@ -55,8 +55,10 @@ const CHANNELS = {
     directUrl: 'https://unlimited2-cl-isp.dps.live/mega/mega.smil/playlist.m3u8',
     mdstrmId: '53d2c1a32640614e62a0e000',
     tokenConfig: {
-      type: 'mega-api',
+      type: 'page-api',
       url: 'https://www.mega.cl/senal-en-vivo/',
+      apiUrl: 'https://api.mega.cl/api/v1/mdstrm',
+      keyPattern: /serverKey\s*:\s*'([^']+)'/,
       player: '5e5597b9171de20f8f30667a',
     },
   },
@@ -66,8 +68,10 @@ const CHANNELS = {
     logo: 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Logotipo_de_Mega_%282020-%29.svg',
     mdstrmId: '631a1d95d3d77c082535e614',
     tokenConfig: {
-      type: 'mega-api',
+      type: 'page-api',
       url: 'https://www.mega.cl/senal-en-vivo/senal-mega-2/',
+      apiUrl: 'https://api.mega.cl/api/v1/mdstrm',
+      keyPattern: /serverKey\s*:\s*'([^']+)'/,
       player: '5e5597b9171de20f8f30667a',
     },
   },
@@ -77,8 +81,10 @@ const CHANNELS = {
     logo: 'https://static2-meganoticias.cdn.mdstrm.com/_common/images/logo-meganoticias-whitetext.svg?=20190705',
     mdstrmId: '561430ae330428c223687e1e',
     tokenConfig: {
-      type: 'mega-api',
+      type: 'page-api',
       url: 'https://www.meganoticias.cl/senal-en-vivo/meganoticias/',
+      apiUrl: 'https://api.mega.cl/api/v1/mdstrm',
+      keyPattern: /serverKey\s*:\s*'([^']+)'/,
       player: '5d5eab33a0f31f0722f36867',
     },
   },
@@ -88,8 +94,10 @@ const CHANNELS = {
     logo: 'https://static.megatiempo.cl/_common/images/meta/megatiempo-rrss.jpg',
     mdstrmId: '56f97fc0b9bb39786b04a3b0',
     tokenConfig: {
-      type: 'mega-api',
+      type: 'page-api',
       url: 'https://www.megatiempo.cl/senal-en-vivo/',
+      apiUrl: 'https://api.mega.cl/api/v1/mdstrm',
+      keyPattern: /serverKey\s*:\s*'([^']+)'/,
       player: '654a6e481633b7487eb2b6b8',
       insecure: true,
     },
