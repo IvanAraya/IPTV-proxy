@@ -1,4 +1,14 @@
-const CHANNELS = {
+const CHANNELS = { 
+  canal13: {
+    name: 'Canal 13',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Teletrece2025.png',
+    directUrl: 'https://redirector.dps.live/hls/13cl/playlist.m3u8',
+  },
+  t13: {
+    name: 'T13',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Teletrece2025.png',
+    directUrl: 'https://redirector.rudo.video/hls-video/10b92cafdf3646cbc1e727f3dc76863621a327fd/t13/t13.smil/playlist.m3u8',
+  },
   tvn: {
     name: 'TVN',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/3/33/Logotipo_de_Televisi%C3%B2n_Nacional_de_Chile.svg',
@@ -34,10 +44,21 @@ const CHANNELS = {
   mega: {
     name: 'Mega',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Logotipo_de_Mega_%282020-%29.svg',
+    directUrl: 'https://unlimited2-cl-isp.dps.live/mega/mega.smil/playlist.m3u8',
     mdstrmId: '53d2c1a32640614e62a0e000',
     tokenConfig: {
       type: 'mega-api',
       url: 'https://www.mega.cl/senal-en-vivo/',
+      player: '5e5597b9171de20f8f30667a',
+    },
+  },
+  mega2: {
+    name: 'Mega 2',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Logotipo_de_Mega_%282020-%29.svg',
+    mdstrmId: '631a1d95d3d77c082535e614',
+    tokenConfig: {
+      type: 'mega-api',
+      url: 'https://www.mega.cl/senal-en-vivo/senal-mega-2/',
       player: '5e5597b9171de20f8f30667a',
     },
   },
@@ -61,16 +82,6 @@ const CHANNELS = {
       player: '654a6e481633b7487eb2b6b8',
       insecure: true,
     },
-  },
-  canal13: {
-    name: 'Canal 13',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Teletrece2025.png',
-    directUrl: 'https://redirector.dps.live/hls/13cl/playlist.m3u8',
-  },
-  t13: {
-    name: 'T13',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Teletrece2025.png',
-    directUrl: 'https://redirector.rudo.video/hls-video/10b92cafdf3646cbc1e727f3dc76863621a327fd/t13/t13.smil/playlist.m3u8',
   },
   chv: {
     name: 'CHV',
