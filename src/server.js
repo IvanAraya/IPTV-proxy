@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 
 const CHANNELS = require('./channels');
-const { extractStreamUrl, buildFallbackUrl, http } = require('./scraper');
+const { extractStreamUrl, buildFallbackUrl } = require('./scraper');
 const {
   getCachedUrl,
   setCachedUrl,
@@ -97,24 +97,12 @@ app.get('/stream/:channelId', async (req, res) => {
       return res.status(503).json({ error: 'No se pudo obtener el stream' });
     }
 
+    console.log(`[${channelId}] → ${url}`);
     res.setHeader('Access-Control-Allow-Origin', '*');
-
-    if (channel.directUrl) {
-      // Canales con URL directa: redirigir (ya apunta al CDN correcto).
-      console.log(`[${channelId}] → redirect ${url}`);
-      return res.redirect(302, url);
-    }
-
-    // Canales mdstrm: el servidor sigue la cadena redirect y envía el contenido
-    // HLS directamente al player. Así el player no necesita seguir ningún redirect
-    // y el CDN nunca ve el User-Agent ni la IP del TV.
-    console.log(`[${channelId}] → proxy ${url.substring(0, 80)}...`);
-    const hls = await http.get(url, { responseType: 'stream', maxRedirects: 5, timeout: 10000 });
-    res.setHeader('Content-Type', hls.headers['content-type'] || 'application/vnd.apple.mpegurl');
-    hls.data.pipe(res);
+    res.redirect(302, url);
   } catch (err) {
     console.error(`[${channelId}] Error:`, err.message);
-    if (!res.headersSent) res.status(500).json({ error: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
@@ -127,7 +115,22 @@ app.get('/playlist.m3u8', (req, res) => {
 
   for (const [id, ch] of Object.entries(CHANNELS)) {
     if (ch.enabled === false) continue;
-    const streamUrl = ch.directUrl || `${baseUrl}/stream/${id}`;
+
+    let streamUrl;
+    if (ch.directUrl) {
+      streamUrl = ch.directUrl;
+    } else {
+      const cached = getCachedUrl(id);
+      if (cached) {
+        // Token cacheado: entregar URL de mdstrm directamente.
+        // OTT Player solo necesita seguir un redirect (mdstrm → CDN) en vez de dos.
+        streamUrl = cached;
+      } else {
+        streamUrl = `${baseUrl}/stream/${id}`;
+        getStreamUrl(id).catch(() => {}); // pre-warm en background
+      }
+    }
+
     lines.push(
       //`#EXTINF:-1 tvg-id="${id}" tvg-name="${ch.name}" tvg-logo="${ch.logo || ''}" tvg-country="CL" tvg-language="Spanish" ,${ch.name}`
       `#EXTINF:0, ${ch.name}`
