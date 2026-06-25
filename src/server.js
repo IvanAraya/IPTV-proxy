@@ -87,6 +87,9 @@ app.get('/stream/:channelId', async (req, res) => {
   if (!channel) {
     return res.status(404).json({ error: `Canal '${channelId}' no encontrado` });
   }
+  if (channel.enabled === false) {
+    return res.status(404).json({ error: `Canal '${channelId}' deshabilitado` });
+  }
 
   try {
     const url = await getStreamUrl(channelId);
@@ -114,6 +117,7 @@ app.get('/playlist.m3u8', (req, res) => {
   const lines = ['#EXTM3U x-tvg-url="https://iptv-org.github.io/epg/guides/cl/programas.cl.epg.xml"', ''];
 
   for (const [id, ch] of Object.entries(CHANNELS)) {
+    if (ch.enabled === false) continue;
     const streamUrl = ch.directUrl || `${baseUrl}/stream/${id}`;
     lines.push(
       //`#EXTINF:-1 tvg-id="${id}" tvg-name="${ch.name}" tvg-logo="${ch.logo || ''}" tvg-country="CL" tvg-language="Spanish" ,${ch.name}`
@@ -141,7 +145,7 @@ app.get('/api/status', (req, res) => {
       id,
       name: ch.name,
       logo: ch.logo || '',
-
+      enabled: ch.enabled !== false,
       type: ch.directUrl ? 'direct' : 'mdstrm',
       cached: cacheInfo?.hasUrl || !!ch.directUrl,
       ttlSeconds: ttlMs ? Math.round(ttlMs / 1000) : ch.directUrl ? null : 0,

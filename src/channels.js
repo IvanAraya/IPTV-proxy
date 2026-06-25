@@ -1,15 +1,18 @@
-const CHANNELS = { 
+const CHANNELS = {
   canal13: {
+    enabled: true,
     name: 'Canal 13',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Teletrece2025.png',
     directUrl: 'https://redirector.dps.live/hls/13cl/playlist.m3u8',
   },
   t13: {
+    enabled: true,
     name: 'T13',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Teletrece2025.png',
     directUrl: 'https://redirector.rudo.video/hls-video/10b92cafdf3646cbc1e727f3dc76863621a327fd/t13/t13.smil/playlist.m3u8',
   },
   tvn: {
+    enabled: true,
     name: 'TVN',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/3/33/Logotipo_de_Televisi%C3%B2n_Nacional_de_Chile.svg',
     mdstrmId: '57a498c4d7b86d600e5461cb',
@@ -22,26 +25,31 @@ const CHANNELS = {
     },
   },
   ntv: {
+    enabled: true,
     name: 'NTV',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Logotipo_de_NTV.svg',
     directUrl: 'https://mdstrm.com/live-stream-playlist/5aaabe9e2c56420918184c6d.m3u8',
   },
   '24horas': {
+    enabled: true,
     name: '24 Horas',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Logo_Canal_24_Horas.png',
     directUrl: 'https://mdstrm.com/live-stream-playlist/57d1a22064f5d85712b20dab.m3u8',
   },
   tvn3: {
+    enabled: true,
     name: 'TVN3',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/c/ca/TVN_3_2023.svg',
     directUrl: 'https://mdstrm.com/live-stream-playlist/5653641561b4eba30a7e4929.m3u8',
   },
   tvchile: {
+    enabled: true,
     name: 'TV Chile',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/4/48/Logotipo_de_TV_Chile.svg',
     directUrl: 'https://mdstrm.com/live-stream-playlist/533adcc949386ce765657d7c.m3u8',
   },
   mega: {
+    enabled: true,
     name: 'Mega',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Logotipo_de_Mega_%282020-%29.svg',
     directUrl: 'https://unlimited2-cl-isp.dps.live/mega/mega.smil/playlist.m3u8',
@@ -53,6 +61,7 @@ const CHANNELS = {
     },
   },
   mega2: {
+    enabled: false,
     name: 'Mega 2',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/a/aa/Logotipo_de_Mega_%282020-%29.svg',
     mdstrmId: '631a1d95d3d77c082535e614',
@@ -63,6 +72,7 @@ const CHANNELS = {
     },
   },
   meganoticias: {
+    enabled: false,
     name: 'Meganoticias',
     logo: 'https://static2-meganoticias.cdn.mdstrm.com/_common/images/logo-meganoticias-whitetext.svg?=20190705',
     mdstrmId: '561430ae330428c223687e1e',
@@ -73,6 +83,7 @@ const CHANNELS = {
     },
   },
   megatiempo: {
+    enabled: false,
     name: 'Megatiempo',
     logo: 'https://static.megatiempo.cl/_common/images/meta/megatiempo-rrss.jpg',
     mdstrmId: '56f97fc0b9bb39786b04a3b0',
@@ -84,61 +95,91 @@ const CHANNELS = {
     },
   },
   chv: {
+    enabled: true,
     name: 'CHV',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/2/27/Logotipo_Principal_de_Chilevisi%C3%B3n.svg',
     directUrl: 'https://redirector.rudo.video/hls-video/10b92cafdf3646cbc1e727f3dc76863621a327fd/chv/chv.smil/playlist.m3u8',
   },
   chvn: {
+    enabled: true,
     name: 'CHV Noticias',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/CHV_Noticias_2018.png',
     directUrl: 'https://redirector.rudo.video/hls-video/339f69c6122f6d8f4574732c235f09b7683e31a5/chvn/chvn.smil/playlist.m3u8',
   },
   chvdeportes: {
+    enabled: true,
     name: 'CHV Deportes',
     logo: null,
     directUrl: 'https://redirector.rudo.video/hls-video/10b92cafdf3646cbc1e727f3dc76863621a327fd/chvdeportes/chvdeportes.smil/playlist.m3u8',
   },
   uchiletv: {
+    enabled: true,
     name: 'Uchile TV',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e9/UChile_TV_logo_2020.png',
     directUrl: 'https://unlimited1-cl-isp.dps.live/uchiletv/uchiletv.smil/playlist.m3u8',
   },
   red: {
+    enabled: true,
     name: 'La Red',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/1/10/La_Red_Logotipo_2021.svg',
     directUrl: 'https://ds5i0a12qngha.cloudfront.net/ts:abr.m3u8',
   },
   ucv: {
+    enabled: true,
     name: 'UCV',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/UCV_%28but%2C_better_quality%29.png',
     directUrl: 'https://unlimited1-cl-isp.dps.live/ucvtv2/ucvtv2.smil/playlist.m3u8',
   },
   ucv2: {
+    enabled: true,
     name: 'UCV2',
     logo: null,
     directUrl: 'https://unlimited1-cl-isp.dps.live/ucvtveventos/ucvtveventos.smil/playlist.m3u8',
   },
+  biobiotv: {
+    enabled: true,
+    name: 'BioBio TV',
+    logo: null,
+    directUrl: 'https://redirector.rudo.video/hls-video/339f69c6122f6d8f4574732c235f09b7683e31a5/bbtv/bbtv.smil/playlist.m3u8?PlaylistM3UCL',
+  },
+  thematv: {
+    enabled: true,
+    name: 'Thema TV',
+    logo: null,
+    directUrl: 'https://unlimited1-cl-isp.dps.live/thema/thema.smil/playlist.m3u8?PlaylistM3UCL',
+  },
+  americatv: {
+    enabled: true,
+    name: 'America TV',
+    logo: null,
+    directUrl: 'https://v2.tustreaming.cl:/radioamericatv/index.m3u8?PlaylistM3UCL',
+  },
   dw: {
+    enabled: true,
     name: 'DW Español',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Deutsche_Welle_Logo.svg',
     directUrl: 'https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/master.m3u8',
   },
   sportinghd: {
+    enabled: true,
     name: 'Valparaiso Sporting',
     logo: 'https://www.sporting.cl/sporting/imag/v1/icon/logo_home.png',
     directUrl: 'https://unlimited2-cl-isp.dps.live/sportinghd/sportinghd.smil/playlist.m3u8',
   },
   teletrack: {
+    enabled: true,
     name: 'Teletrack',
     logo: 'https://teletrak.cl/wp-content/uploads/2025/09/TELETRAK-LOGO-MAID-02.png',
     directUrl: 'https://teletraktv.janus.cl/playlist/stream.m3u8?id=mp3a92s3',
   },
   tvturf: {
+    enabled: true,
     name: 'TV Turf',
     logo: 'https://tvturf.cl/tvturf/site/artic/20181221/imag/foto_0000001320181221154000/Sin_titulo-1.png',
     directUrl: 'https://tvturf4.janus.cl/playlist/stream.m3u8?id=mp3ajrmh',
   },
   energeek: {
+    enabled: true,
     name: 'Energeek Retro',
     logo: 'https://cdn.energeek.cl/logos/EG-Retro-2025_brand.png',
     directUrl: 'https://backend.energeek.cl/webtv/egretroweb/index.m3u8?token=D3m0M3UCLWeb&PlaylistM3UCL',
