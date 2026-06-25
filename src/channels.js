@@ -2,7 +2,7 @@ const CHANNELS = {
   canal13: {
     enabled: true,
     name: 'Canal 13',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Teletrece2025.png',
+    logo: 'https://www-storage.13.cl/default/logos/logos-13.svg',
     directUrl: 'https://redirector.dps.live/hls/13cl/playlist.m3u8',
   },
   t13: {
@@ -122,7 +122,7 @@ const CHANNELS = {
   },
   uchiletv: {
     enabled: true,
-    name: 'Uchile TV',
+    name: 'UCShile TV',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e9/UChile_TV_logo_2020.png',
     directUrl: 'https://unlimited1-cl-isp.dps.live/uchiletv/uchiletv.smil/playlist.m3u8',
   },
