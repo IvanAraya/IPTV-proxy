@@ -85,8 +85,8 @@ async function extractStreamUrl(pageUrl, mdstrmId, tokenConfig) {
   }
 
   if (!token) {
-    console.warn(`[Scraper] Sin token válido, fallback para ${mdstrmId}`);
-    return buildFallbackUrl(mdstrmId);
+    console.warn(`[Scraper] Sin token válido para ${mdstrmId}`);
+    return null;
   }
 
   const url = `https://mdstrm.com/live-stream-playlist/${mdstrmId}.m3u8?access_token=${token}${player ? `&player=${player}` : ''}`;
