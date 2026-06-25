@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 
 const CHANNELS = require('./channels');
-const { extractStreamUrl, buildFallbackUrl } = require('./scraper');
+const { extractStreamUrl, buildFallbackUrl, http } = require('./scraper');
 const {
   getCachedUrl,
   setCachedUrl,
@@ -27,6 +27,20 @@ function getBaseUrl(req) {
 }
 
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Sigue un salto de redirect (mdstrm → CDN) en el servidor.
+// El player recibe la URL final del CDN directamente, evitando la cadena doble de redirects.
+async function resolveRedirect(url) {
+  try {
+    const res = await http.get(url, { maxRedirects: 0, validateStatus: () => true, timeout: 8000 });
+    if ((res.status === 301 || res.status === 302) && res.headers.location) {
+      return res.headers.location;
+    }
+  } catch (err) {
+    console.warn(`[resolveRedirect] Error: ${err.message}`);
+  }
+  return url;
+}
 
 // ─────────────────────────────────────────────
 // HELPER: obtener URL del stream (caché → scraping → fallback)
@@ -92,14 +106,15 @@ app.get('/stream/:channelId', async (req, res) => {
   }
 
   try {
-    const url = await getStreamUrl(channelId);
-    if (!url) {
+    const rawUrl = await getStreamUrl(channelId);
+    if (!rawUrl) {
       return res.status(503).json({ error: 'No se pudo obtener el stream' });
     }
 
-    // Redirigir al player directo a la URL del stream.
-    // El player sigue la cadena de redirecciones desde su propia IP (Chile),
-    // evitando el geo-bloqueo que mdstrm aplica a las IPs de Render.com (EE.UU.).
+    // Para canales mdstrm: resolver el redirect de mdstrm → CDN en el servidor,
+    // así el player recibe la URL del CDN directamente (un solo hop en vez de dos).
+    const url = channel.directUrl ? rawUrl : await resolveRedirect(rawUrl);
+
     console.log(`[${channelId}] → ${url}`);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.redirect(302, url);

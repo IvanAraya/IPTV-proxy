@@ -97,4 +97,4 @@ function buildFallbackUrl(mdstrmId) {
   return `https://mdstrm.com/live-stream-playlist/${mdstrmId}.m3u8`;
 }
 
-module.exports = { extractStreamUrl, buildFallbackUrl };
+module.exports = { extractStreamUrl, buildFallbackUrl, http };
