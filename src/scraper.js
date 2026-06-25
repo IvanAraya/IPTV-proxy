@@ -42,6 +42,12 @@ async function getTokenMegaApi(pageUrl, mdstrmId, insecure = false) {
   return res.data.access_token;
 }
 
+async function validateMegaToken(mdstrmId, token, player) {
+  const url = `https://mdstrm.com/live-stream-playlist/${mdstrmId}.m3u8?access_token=${token}${player ? `&player=${player}` : ''}`;
+  const res = await http.get(url, { maxRedirects: 0, validateStatus: () => true, timeout: 8000 });
+  return res.status === 302;
+}
+
 async function extractStreamUrl(pageUrl, mdstrmId, tokenConfig) {
   if (!tokenConfig) {
     console.log(`[Scraper] Canal libre: ${mdstrmId}`);
@@ -56,15 +62,30 @@ async function extractStreamUrl(pageUrl, mdstrmId, tokenConfig) {
       console.log(`[Scraper] Token HTML: ${pageUrl}`);
       token = await getTokenFromHtml(pageUrl, referer, pattern);
     } else if (type === 'mega-api') {
-      console.log(`[Scraper] Token Mega API: ${pageUrl}`);
-      token = await getTokenMegaApi(pageUrl, mdstrmId, insecure);
+      const MAX_ATTEMPTS = 3;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        console.log(`[Scraper] Token Mega API: ${pageUrl} (intento ${attempt}/${MAX_ATTEMPTS})`);
+        try {
+          token = await getTokenMegaApi(pageUrl, mdstrmId, insecure);
+          const valid = await validateMegaToken(mdstrmId, token, player);
+          if (valid) {
+            console.log(`[Scraper] Token válido en intento ${attempt}`);
+            break;
+          }
+          console.warn(`[Scraper] Token CLOSED_ACCESS (intento ${attempt}), reintentando...`);
+          token = null;
+        } catch (err) {
+          console.error(`[Scraper] Error intento ${attempt}: ${err.message}`);
+          if (attempt === MAX_ATTEMPTS) token = null;
+        }
+      }
     }
   } catch (err) {
     console.error(`[Scraper] Error obteniendo token (${mdstrmId}): ${err.message}`);
   }
 
   if (!token) {
-    console.warn(`[Scraper] Sin token, fallback para ${mdstrmId}`);
+    console.warn(`[Scraper] Sin token válido, fallback para ${mdstrmId}`);
     return buildFallbackUrl(mdstrmId);
   }
 
