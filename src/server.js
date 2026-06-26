@@ -97,9 +97,20 @@ app.get('/stream/:channelId', async (req, res) => {
       return res.status(503).json({ error: 'No se pudo obtener el stream' });
     }
 
-    console.log(`[${channelId}] → ${url}`);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.redirect(302, url);
+
+    if (channel.directUrl) {
+      console.log(`[${channelId}] → ${url}`);
+      return res.redirect(302, url);
+    }
+
+    // Canales mdstrm: servir m3u8 mínimo con Content-Type correcto.
+    // OTT Player lo trata como master HLS y re-solicita /stream/:id en cada
+    // reproducción, garantizando siempre un token fresco en vez de cachear
+    // la URL interna con token expirado.
+    console.log(`[${channelId}] → m3u8 ${url.substring(0, 80)}...`);
+    res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+    res.send(`#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=3000000\n${url}\n`);
   } catch (err) {
     console.error(`[${channelId}] Error:`, err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -116,20 +127,7 @@ app.get('/playlist.m3u8', (req, res) => {
   for (const [id, ch] of Object.entries(CHANNELS)) {
     if (ch.enabled === false) continue;
 
-    let streamUrl;
-    if (ch.directUrl) {
-      streamUrl = ch.directUrl;
-    } else {
-      const cached = getCachedUrl(id);
-      if (cached) {
-        // Token cacheado: entregar URL de mdstrm directamente.
-        // OTT Player solo necesita seguir un redirect (mdstrm → CDN) en vez de dos.
-        streamUrl = cached;
-      } else {
-        streamUrl = `${baseUrl}/stream/${id}`;
-        getStreamUrl(id).catch(() => {}); // pre-warm en background
-      }
-    }
+    const streamUrl = ch.directUrl || `${baseUrl}/stream/${id}`;
 
     lines.push(
       //`#EXTINF:-1 tvg-id="${id}" tvg-name="${ch.name}" tvg-logo="${ch.logo || ''}" tvg-country="CL" tvg-language="Spanish" ,${ch.name}`
