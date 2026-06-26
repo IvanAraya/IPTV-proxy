@@ -110,7 +110,7 @@ app.get('/stream/:channelId', async (req, res) => {
     // la URL interna con token expirado.
     console.log(`[${channelId}] → m3u8 ${url.substring(0, 80)}...`);
     res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-    res.send(`#EXTM3U\n${url}\n`);
+    res.send(`#EXTM3U\n#EXTINF:-1,${channel.name}\n${url}\n`);
   } catch (err) {
     console.error(`[${channelId}] Error:`, err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
