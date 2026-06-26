@@ -98,19 +98,8 @@ app.get('/stream/:channelId', async (req, res) => {
     }
 
     res.setHeader('Access-Control-Allow-Origin', '*');
-
-    if (channel.directUrl) {
-      console.log(`[${channelId}] → ${url}`);
-      return res.redirect(302, url);
-    }
-
-    // Canales mdstrm: servir m3u8 mínimo con Content-Type correcto.
-    // OTT Player lo trata como master HLS y re-solicita /stream/:id en cada
-    // reproducción, garantizando siempre un token fresco en vez de cachear
-    // la URL interna con token expirado.
-    console.log(`[${channelId}] → m3u8 ${url.substring(0, 80)}...`);
-    res.setHeader('Content-Type', 'application/x-mpegurl');
-    res.send(`#EXTM3U\n#EXTINF:-1,${channel.name}\n${url}\n`);
+    console.log(`[${channelId}] → ${url.substring(0, 100)}`);
+    res.redirect(302, url);
   } catch (err) {
     console.error(`[${channelId}] Error:`, err.message);
     res.status(500).json({ error: 'Error interno del servidor' });

@@ -108,17 +108,17 @@ const CHANNELS = {
     logo: 'https://upload.wikimedia.org/wikipedia/commons/2/27/Logotipo_Principal_de_Chilevisi%C3%B3n.svg',
     directUrl: 'https://redirector.rudo.video/hls-video/10b92cafdf3646cbc1e727f3dc76863621a327fd/chv/chv.smil/playlist.m3u8',
   },
-  chvn: {
-    enabled: true,
-    name: 'CHV Noticias',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/CHV_Noticias_2018.png',
-    directUrl: 'https://redirector.rudo.video/hls-video/339f69c6122f6d8f4574732c235f09b7683e31a5/chvn/chvn.smil/playlist.m3u8',
-  },
   chvdeportes: {
     enabled: true,
     name: 'CHV Deportes',
     logo: null,
     directUrl: 'https://redirector.rudo.video/hls-video/10b92cafdf3646cbc1e727f3dc76863621a327fd/chvdeportes/chvdeportes.smil/playlist.m3u8',
+  },
+  chvn: {
+    enabled: true,
+    name: 'CHV Noticias',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/CHV_Noticias_2018.png',
+    directUrl: 'https://redirector.rudo.video/hls-video/339f69c6122f6d8f4574732c235f09b7683e31a5/chvn/chvn.smil/playlist.m3u8',
   },
   uchiletv: {
     enabled: true,
