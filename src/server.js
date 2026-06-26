@@ -109,7 +109,7 @@ app.get('/stream/:channelId', async (req, res) => {
     // reproducción, garantizando siempre un token fresco en vez de cachear
     // la URL interna con token expirado.
     console.log(`[${channelId}] → m3u8 ${url.substring(0, 80)}...`);
-    res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+    res.setHeader('Content-Type', 'application/x-mpegurl');
     res.send(`#EXTM3U\n#EXTINF:-1,${channel.name}\n${url}\n`);
   } catch (err) {
     console.error(`[${channelId}] Error:`, err.message);
